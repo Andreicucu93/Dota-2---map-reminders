@@ -1,6 +1,4 @@
 import customtkinter as ctk
-import ctypes
-from ctypes import wintypes
 
 class TimerApp:
     def __init__(self, root):
@@ -10,20 +8,6 @@ class TimerApp:
         self.root.attributes("-topmost", True)  # Always on top
         ctk.set_appearance_mode("dark")  # Dark mode
         ctk.set_default_color_theme("dark-blue")  # Optional theme
-
-    def make_window_topmost(self):
-        HWND_TOPMOST = -1
-        SWP_NOACTIVATE = 0x0010
-        SWP_NOMOVE = 0x0002
-        SWP_NOSIZE = 0x0001
-
-        hwnd = ctypes.windll.user32.FindWindowW(None, self.root.title())
-        if hwnd:
-            ctypes.windll.user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-                                              SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE)
-        else:
-            print("Failed to find window handle.")
-
 
         # Initial time values
         self.minutes = 0
@@ -39,17 +23,15 @@ class TimerApp:
         self.start_button.grid(column=0, row=0, padx=10)
 
         # Edit inputs for minutes and seconds
-        self.minute_entry = ctk.CTkEntry(root, width=30, font=('Arial', 14))
-        self.second_entry = ctk.CTkEntry(root, width=30, font=('Arial', 14))
+        self.edit_frame = ctk.CTkFrame(root, width=400, height=70)
+        self.minute_entry = ctk.CTkEntry(self.edit_frame, width=30, font=('Arial', 14))
+        self.second_entry = ctk.CTkEntry(self.edit_frame, width=30, font=('Arial', 14))
         self.minute_entry.insert(0, "0")
         self.second_entry.insert(0, "0")
-        ctk.CTkLabel(root, text="Minutes:", font=('Arial', 12)).grid(row=0, column=2, padx=5)
-        self.minute_entry.grid(row=0, column=3, padx=5)
-        ctk.CTkLabel(root, text="Seconds:", font=('Arial', 12)).grid(row=0, column=4, padx=5)
-        self.second_entry.grid(row=0, column=5, padx=5)
-
-        self.minute_entry.configure(state="disabled")
-        self.second_entry.configure(state="disabled")
+        ctk.CTkLabel(self.edit_frame, text="Minutes:", font=('Arial', 12)).grid(row=0, column=0, padx=5)
+        self.minute_entry.grid(row=0, column=1, padx=5)
+        ctk.CTkLabel(self.edit_frame, text="Seconds:", font=('Arial', 12)).grid(row=0, column=2, padx=5)
+        self.second_entry.grid(row=0, column=3, padx=5)
 
         # Reminder label
         self.reminder_label = ctk.CTkLabel(root, text="", font=('Arial', 12), text_color="red")
@@ -68,15 +50,12 @@ class TimerApp:
             self.edit_mode()
 
     def edit_mode(self):
-        self.minute_entry.configure(state="normal")
-        self.second_entry.configure(state="normal")
+        self.edit_frame.grid(column=3, row=0, pady=5)
         self.minute_entry.delete(0, ctk.END)
         self.second_entry.delete(0, ctk.END)
         self.minute_entry.insert(0, str(self.minutes))
         self.second_entry.insert(0, str(self.seconds))
-        self.set_time_button = ctk.CTkButton(root, width=25, text="Set Time", command=self.set_time)
-        self.set_time_button.grid(row=0, column=6)
-
+        ctk.CTkButton(self.edit_frame, text="Set Time", command=self.set_time).grid(row=1, columnspan=4, pady=5)
 
     def set_time(self):
         # Update timer with user input
@@ -84,7 +63,7 @@ class TimerApp:
             self.minutes = int(self.minute_entry.get())
             self.seconds = int(self.second_entry.get())
             self.update_time_label()
-            self.reminder_label.forget()
+            self.edit_frame.grid_remove()
             self.toggle_timer()
         except ValueError:
             pass  # Ignore invalid input
@@ -115,10 +94,4 @@ class TimerApp:
 # Initialize the application
 root = ctk.CTk()
 app = TimerApp(root)
-
-# Call make_window_topmost after the window is created
-root.after(100, app.make_window_topmost)  # Ensures the window stays on top
-
-# Start the main event loop
 root.mainloop()
-
